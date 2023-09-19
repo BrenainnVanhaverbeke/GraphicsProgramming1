@@ -76,5 +76,6 @@ namespace dae
 		Scene_W1& operator=(Scene_W1&&) noexcept = delete;
 
 		void Initialize() override;
+		void Update(dae::Timer* pTimer) override;
 	};
 }

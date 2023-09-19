@@ -126,5 +126,24 @@ namespace dae {
 		AddPlane({ 0.f, 75.f, 0.f }, { 0.f, -1.f,0.f }, matId_Solid_Yellow);
 		AddPlane({ 0.f, 0.f, 125.f }, { 0.f, 0.f,-1.f }, matId_Solid_Magenta);
 	}
+
+	void Scene_W1::Update(dae::Timer* pTimer)
+	{
+		Vector3 unitY = Vector3::UnitY;
+
+		float dotResult{};
+		dotResult = Vector3::Dot(Vector3::UnitX, Vector3::UnitX);
+		assert(dotResult == 1, "Error in dotproduct");
+		dotResult = Vector3::Dot(Vector3::UnitX, -Vector3::UnitX);
+		assert(dotResult == -1, "Error in dotproduct");
+		dotResult = Vector3::Dot(Vector3::UnitX, Vector3::UnitY);
+		assert(dotResult == 0, "Error in dotproduct");
+		Vector3 crossResult{};
+		crossResult = Vector3::Cross(Vector3::UnitZ, Vector3::UnitX);
+		assert(crossResult == unitY, "Error in cross product");
+		crossResult = Vector3::Cross(Vector3::UnitX, Vector3::UnitZ);
+		assert(crossResult == -unitY, "Error in cross product");
+		Scene::Update(pTimer);
+	}
 #pragma endregion
 }

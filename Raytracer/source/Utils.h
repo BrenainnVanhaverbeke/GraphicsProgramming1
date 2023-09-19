@@ -12,6 +12,19 @@ namespace dae
 		//SPHERE HIT-TESTS
 		inline bool HitTest_Sphere(const Sphere& sphere, const Ray& ray, HitRecord& hitRecord, bool ignoreHitRecord = false)
 		{
+			// Setting up triangle between ray origin, sphere origin and projection of ray direction.
+			Vector3 toCenter = sphere.origin - ray.origin;
+
+			float distanceToPerpendicular = Vector3::Dot(toCenter, ray.direction);
+			float centerToPerpendicular = sqrtf(Square(toCenter.Magnitude()) - Square(distanceToPerpendicular));
+
+			// Can calculate distance to intersect thanks to centerToPerpendicular
+			float intersectPerpendicularDistance = sqrtf(Square(sphere.radius) - Square(centerToPerpendicular));
+
+			Vector3 interSectPoint = ray.direction * (distanceToPerpendicular - intersectPerpendicularDistance);
+			
+
+
 			//todo W1
 			assert(false && "No Implemented Yet!");
 			return false;
@@ -128,7 +141,7 @@ namespace dae
 				//read till end of line and ignore all remaining chars
 				file.ignore(1000, '\n');
 
-				if (file.eof()) 
+				if (file.eof())
 					break;
 			}
 
@@ -143,7 +156,7 @@ namespace dae
 				Vector3 edgeV0V2 = positions[i2] - positions[i0];
 				Vector3 normal = Vector3::Cross(edgeV0V1, edgeV0V2);
 
-				if(isnan(normal.x))
+				if (isnan(normal.x))
 				{
 					int k = 0;
 				}
