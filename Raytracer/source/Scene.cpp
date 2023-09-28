@@ -28,8 +28,21 @@ namespace dae {
 
 	void dae::Scene::GetClosestHit(const Ray& ray, HitRecord& closestHit) const
 	{
-		//todo W1
-		assert(false && "No Implemented Yet!");
+		// Arbitrarily large number to guarantee a closer hit.
+		HitRecord closest;
+		for (size_t i = 0; i < m_SphereGeometries.size(); i++)
+		{
+			// If smaller distance is found, store in temporary HitRecord.
+			if (GeometryUtils::HitTest_Sphere(m_SphereGeometries[i], ray, closestHit) && closestHit.t < closest.t)
+				closest = closestHit;
+		}
+		for (size_t i = 0; i < m_PlaneGeometries.size(); i++)
+		{
+			if (GeometryUtils::HitTest_Plane(m_PlaneGeometries[i], ray, closestHit) && closestHit.t < closest.t)
+				closest = closestHit;
+		}
+		// Override closestHit with found closest.
+		closestHit = closest;
 	}
 
 	bool Scene::DoesHit(const Ray& ray) const
@@ -129,20 +142,6 @@ namespace dae {
 
 	void Scene_W1::Update(dae::Timer* pTimer)
 	{
-		Vector3 unitY = Vector3::UnitY;
-
-		float dotResult{};
-		dotResult = Vector3::Dot(Vector3::UnitX, Vector3::UnitX);
-		assert(dotResult == 1, "Error in dotproduct");
-		dotResult = Vector3::Dot(Vector3::UnitX, -Vector3::UnitX);
-		assert(dotResult == -1, "Error in dotproduct");
-		dotResult = Vector3::Dot(Vector3::UnitX, Vector3::UnitY);
-		assert(dotResult == 0, "Error in dotproduct");
-		Vector3 crossResult{};
-		crossResult = Vector3::Cross(Vector3::UnitZ, Vector3::UnitX);
-		assert(crossResult == unitY, "Error in cross product");
-		crossResult = Vector3::Cross(Vector3::UnitX, Vector3::UnitZ);
-		assert(crossResult == -unitY, "Error in cross product");
 		Scene::Update(pTimer);
 	}
 #pragma endregion

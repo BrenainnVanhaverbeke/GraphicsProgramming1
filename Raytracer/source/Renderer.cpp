@@ -26,16 +26,32 @@ void Renderer::Render(Scene* pScene) const
 	Camera& camera = pScene->GetCamera();
 	auto& materials = pScene->GetMaterials();
 	auto& lights = pScene->GetLights();
+	const float aspectRatio{ static_cast<float>(m_Width) / static_cast<float>(m_Height) };
 
 	for (int px{}; px < m_Width; ++px)
 	{
 		for (int py{}; py < m_Height; ++py)
 		{
-			float gradient = px / static_cast<float>(m_Width);
-			gradient += py / static_cast<float>(m_Width);
-			gradient /= 2.0f;
+			float viewX{ (((2.f * (static_cast<float>(px) + 0.5f)) / m_Width) - 1) * aspectRatio };
+			float viewY{ 1.f - ((2.f * static_cast<float>(py)) / m_Height) };
+			Vector3 rayDirection{ viewX, viewY, 1.0f };
+			rayDirection.Normalize();
+			Ray viewRay{ camera.origin, rayDirection };
 
-			ColorRGB finalColor{ gradient, gradient, gradient };
+
+
+			ColorRGB finalColor{};
+			HitRecord closestHit{};
+
+			pScene->GetClosestHit(viewRay, closestHit);
+
+			if (closestHit.didHit)
+			{
+				float scaled_t = closestHit.t / 175.f;
+				finalColor = materials[closestHit.materialIndex]->Shade();
+				ColorRGB test = materials[closestHit.materialIndex]->Shade() * scaled_t;
+				finalColor -= test;
+			}
 
 			//Update Color in Buffer
 			finalColor.MaxToOne();

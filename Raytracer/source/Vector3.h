@@ -43,8 +43,6 @@ namespace dae
 		float& operator[](int index);
 		float operator[](int index) const;
 
-		bool operator==(const Vector3& v);
-
 		static const Vector3 UnitX;
 		static const Vector3 UnitY;
 		static const Vector3 UnitZ;

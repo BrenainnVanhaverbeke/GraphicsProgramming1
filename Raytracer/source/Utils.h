@@ -12,22 +12,24 @@ namespace dae
 		//SPHERE HIT-TESTS
 		inline bool HitTest_Sphere(const Sphere& sphere, const Ray& ray, HitRecord& hitRecord, bool ignoreHitRecord = false)
 		{
-			// Setting up triangle between ray origin, sphere origin and projection of ray direction.
+			// Setting up triangle between ray origin, sphere origin and projection of camera-sphere vector on view ray.
 			Vector3 toCenter = sphere.origin - ray.origin;
 
 			float distanceToPerpendicular = Vector3::Dot(toCenter, ray.direction);
 			float centerToPerpendicular = sqrtf(Square(toCenter.Magnitude()) - Square(distanceToPerpendicular));
+			if (sphere.radius <= centerToPerpendicular)
+				return false;
 
 			// Can calculate distance to intersect thanks to centerToPerpendicular
-			float intersectPerpendicularDistance = sqrtf(Square(sphere.radius) - Square(centerToPerpendicular));
+			if (!ignoreHitRecord)
+			{
+				float intersectPerpendicularDistance = sqrtf(Square(sphere.radius) - Square(centerToPerpendicular));
+				hitRecord.didHit = true;
+				hitRecord.materialIndex = sphere.materialIndex;
+				hitRecord.t = distanceToPerpendicular - intersectPerpendicularDistance;
+			}
 
-			Vector3 interSectPoint = ray.direction * (distanceToPerpendicular - intersectPerpendicularDistance);
-			
-
-
-			//todo W1
-			assert(false && "No Implemented Yet!");
-			return false;
+			return true;
 		}
 
 		inline bool HitTest_Sphere(const Sphere& sphere, const Ray& ray)
@@ -35,14 +37,26 @@ namespace dae
 			HitRecord temp{};
 			return HitTest_Sphere(sphere, ray, temp, true);
 		}
-#pragma endregion
+#pragma endregionY
 #pragma region Plane HitTest
 		//PLANE HIT-TESTS
 		inline bool HitTest_Plane(const Plane& plane, const Ray& ray, HitRecord& hitRecord, bool ignoreHitRecord = false)
 		{
-			//todo W1
-			assert(false && "No Implemented Yet!");
-			return false;
+			float rayToNormalDot{ Vector3::Dot(ray.direction, plane.normal) };
+			// Backface culling and recommended epsilon check.
+			if (rayToNormalDot < 0 && FLT_EPSILON <= rayToNormalDot)
+				return false;
+
+			float t{ Vector3::Dot(plane.origin - ray.origin, plane.normal) / rayToNormalDot };
+			if (t < 0)
+				return false;
+			if (!ignoreHitRecord)
+			{
+				hitRecord.didHit = true;
+				hitRecord.t = t;
+				hitRecord.materialIndex = plane.materialIndex;
+			}
+			return true;
 		}
 
 		inline bool HitTest_Plane(const Plane& plane, const Ray& ray)

@@ -158,9 +158,5 @@ namespace dae
 		if (index == 1) return y;
 		return z;
 	}
-	bool Vector3::operator==(const Vector3& v)
-	{
-		return this->x == v.x && this->y == v.y && this->z == v.z;
-	}
 #pragma endregion
 }
