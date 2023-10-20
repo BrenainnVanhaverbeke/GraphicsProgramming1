@@ -34,7 +34,7 @@ namespace dae
 		Matrix cameraToWorld{  };
 
 
-		Matrix CalculateCameraToWorld()
+		Matrix CalculateCameraToWorld() const 
 		{
 			Vector3 rightVector{ Vector3::Cross(Vector3::UnitY, forward).Normalized() };
 			Vector3 upVector{ Vector3::Cross(forward, rightVector) };
@@ -46,17 +46,18 @@ namespace dae
 		{
 			const float deltaTime{ pTimer->GetElapsed() };
 			constexpr float moveSpeed{ 5.0f };
+			constexpr float rotationSpeed{ 0.05f };
+			Vector3 right{ Vector3::Cross(Vector3::UnitY, forward).Normalized() };
 
 			//Keyboard Input
 			const uint8_t* pKeyboardState = SDL_GetKeyboardState(nullptr);
 			origin += forward * moveSpeed * deltaTime * pKeyboardState[SDL_SCANCODE_W];
-			origin.x -= moveSpeed * deltaTime * pKeyboardState[SDL_SCANCODE_A];
+			origin -= right * moveSpeed * deltaTime * pKeyboardState[SDL_SCANCODE_A];
 			origin -= forward * moveSpeed * deltaTime * pKeyboardState[SDL_SCANCODE_S];
-			origin.x += moveSpeed * deltaTime * pKeyboardState[SDL_SCANCODE_D];
+			origin += right * moveSpeed * deltaTime * pKeyboardState[SDL_SCANCODE_D];
 
 			//Mouse Input
 			int mouseX{}, mouseY{};
-			constexpr float rotationSpeed{ 0.05f };
 			const uint32_t mouseState = SDL_GetRelativeMouseState(&mouseX, &mouseY);
 
 			if ((mouseState & SDL_BUTTON(SDL_BUTTON_LEFT)) || mouseState & SDL_BUTTON(SDL_BUTTON_RIGHT))

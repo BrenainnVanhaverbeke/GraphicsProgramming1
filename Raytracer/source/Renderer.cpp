@@ -26,21 +26,12 @@ void Renderer::Render(Scene* pScene) const
 	Camera& camera = pScene->GetCamera();
 	auto& materials = pScene->GetMaterials();
 	auto& lights = pScene->GetLights();
-	const float width{ static_cast<float>(m_Width) };
-	const float height{ static_cast<float>(m_Height) };
-	const float aspectRatio{ width / height };
-	const float fov{ tanf(camera.fovAngle / 2.0f) };
 	const Matrix cameraToWorld{ camera.CalculateCameraToWorld() };
 	for (int px{}; px < m_Width; ++px)
 	{
 		for (int py{}; py < m_Height; ++py)
 		{
-			float viewX{ ((2.0f * (static_cast<float>(px) + 0.5f)) / width - 1.0f) * (aspectRatio * fov) };
-			float viewY{ (1.f - ((2.f * (static_cast<float>(py) + 0.5f)) / height)) * fov };
-			Vector3 rayDirection{ viewX, viewY, 1.0f };
-			rayDirection.Normalize();
-
-			Ray viewRay{ camera.origin, cameraToWorld.TransformVector(rayDirection).Normalized() };
+			Ray viewRay{ GetViewRay(px, py, camera, cameraToWorld) };
 
 			ColorRGB finalColor{};
 			HitRecord closestHit{};
@@ -48,7 +39,18 @@ void Renderer::Render(Scene* pScene) const
 			pScene->GetClosestHit(viewRay, closestHit);
 
 			if (closestHit.didHit)
+			{
 				finalColor = materials[closestHit.materialIndex]->Shade();
+				Vector3 hitOrigin{ closestHit.origin + (closestHit.normal * 0.001f) };
+				for (size_t i = 0; i < lights.size(); i++)
+				{
+					Vector3 lightDirection{ LightUtils::GetDirectionToLight(lights[i], hitOrigin) };
+					Ray lightRay{ hitOrigin, lightDirection };
+					lightRay.max = lightDirection.Magnitude();
+					if (pScene->DoesHit(lightRay))
+						finalColor *= 0.5f;
+				}
+			}
 
 			//Update Color in Buffer
 			finalColor.MaxToOne();
@@ -68,4 +70,19 @@ void Renderer::Render(Scene* pScene) const
 bool Renderer::SaveBufferToImage() const
 {
 	return SDL_SaveBMP(m_pBuffer, "RayTracing_Buffer.bmp");
+}
+
+inline Ray dae::Renderer::GetViewRay(int px, int py, Camera& camera, const Matrix& cameraToWorld) const
+{
+	const float width{ static_cast<float>(m_Width) };
+	const float height{ static_cast<float>(m_Height) };
+	const float aspectRatio{ width / height };
+	const float fov{ tanf(camera.fovAngle / 2.0f) };
+
+	float viewX{ ((2.0f * (static_cast<float>(px) + 0.5f)) / width - 1.0f) * (aspectRatio * fov) };
+	float viewY{ (1.f - ((2.f * (static_cast<float>(py) + 0.5f)) / height)) * fov };
+	Vector3 rayDirection{ viewX, viewY, 1.0f };
+	rayDirection.Normalize();
+
+	return { camera.origin, cameraToWorld.TransformVector(rayDirection).Normalized() };
 }

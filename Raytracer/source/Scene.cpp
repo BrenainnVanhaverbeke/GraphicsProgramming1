@@ -33,13 +33,15 @@ namespace dae
 		for (size_t i = 0; i < m_SphereGeometries.size(); i++)
 		{
 			// If smaller distance is found, store in temporary HitRecord.
-			if (GeometryUtils::HitTest_Sphere(m_SphereGeometries[i], ray, closestHit) && closestHit.t < closest.t)
-				closest = closestHit;
+			if (GeometryUtils::HitTest_Sphere(m_SphereGeometries[i], ray, closestHit) 
+				&& closestHit.t < closest.t)
+					closest = closestHit;
 		}
 		for (size_t i = 0; i < m_PlaneGeometries.size(); i++)
 		{
-			if (GeometryUtils::HitTest_Plane(m_PlaneGeometries[i], ray, closestHit) && closestHit.t < closest.t)
-				closest = closestHit;
+			if (GeometryUtils::HitTest_Plane(m_PlaneGeometries[i], ray, closestHit) 
+				&& closestHit.t < closest.t)
+					closest = closestHit;
 		}
 		// Override closestHit with found closest.
 		closestHit = closest;
@@ -47,8 +49,16 @@ namespace dae
 
 	bool Scene::DoesHit(const Ray& ray) const
 	{
-		//todo W3
-		assert(false && "No Implemented Yet!");
+		for (size_t i = 0; i < m_SphereGeometries.size(); i++)
+		{
+			if (GeometryUtils::HitTest_Sphere(m_SphereGeometries[i], ray))
+				return true;
+		}
+		for (size_t i = 0; i < m_PlaneGeometries.size(); i++)
+		{
+			if (GeometryUtils::HitTest_Plane(m_PlaneGeometries[i], ray))
+				return true;
+		}
 		return false;
 	}
 
@@ -156,7 +166,7 @@ namespace dae
 
 		// Planes
 		AddPlane({ -5.0f, 0, 0, }, { 1.0f, 0, 0 }, matId_Solid_Green);
-		AddPlane({ 5.0f, 0, 0, }, { -1.0f, 0, 0 }, matId_Solid_Green);
+		AddPlane({ 5.0f, 0, 0, }, { -1.0f, 0, 0 }, matId_Solid_Blue);
 		AddPlane({ 0, 0, 0, }, { 0, 1.0f, 0 }, matId_Solid_Yellow);
 		AddPlane({ 0, 10.0f, 0, }, { 0, -1.0f, 0 }, matId_Solid_Yellow);
 		AddPlane({ 0, 0, 10.0f }, { 0, 0, -1.0f }, matId_Solid_Magenta);

@@ -12,22 +12,28 @@ namespace dae
 		//SPHERE HIT-TESTS
 		inline bool HitTest_Sphere(const Sphere& sphere, const Ray& ray, HitRecord& hitRecord, bool ignoreHitRecord = false)
 		{
-			Vector3 toCenter = sphere.origin - ray.origin;
-
-			float distanceToPerpendicular = Vector3::Dot(toCenter, ray.direction);
-			float sphereToDot = sqrtf(Square(toCenter.Magnitude()) - Square(distanceToPerpendicular));
-			if (sphere.radius <= sphereToDot || distanceToPerpendicular < 0)
+			const float squaredRadius{ sphere.radius * sphere.radius };
+			const Vector3 sphereDirection = sphere.origin - ray.origin;
+			
+			// 1st triangle
+			float hypothenuse{ sphereDirection.SqrMagnitude() };
+			float projectionOnRay = Vector3::Dot(sphereDirection, ray.direction);
+			// Working with squared result, so squaring the projection as well.
+			float shortSide{ hypothenuse - projectionOnRay * projectionOnRay };
+			if (squaredRadius <= shortSide)
 				return false;
-
-			// Can calculate distance to intersect thanks to centerToPerpendicular
+			// 2nd triangle
+			float t{ projectionOnRay - sqrtf(squaredRadius - shortSide) };
+			if (t < ray.min || ray.max < t)
+				return false;
 			if (!ignoreHitRecord)
 			{
-				float intersectPerpendicularDistance = sqrtf(Square(sphere.radius) - Square(sphereToDot));
-				hitRecord.didHit = true;
 				hitRecord.materialIndex = sphere.materialIndex;
-				hitRecord.t = distanceToPerpendicular - intersectPerpendicularDistance;
+				hitRecord.t = t;
+				hitRecord.origin = hitRecord.t * ray.direction + ray.origin;
+				hitRecord.normal = Vector3{ sphere.origin, hitRecord.origin }.Normalized();
 			}
-
+			hitRecord.didHit = true;
 			return true;
 		}
 
@@ -41,20 +47,22 @@ namespace dae
 		//PLANE HIT-TESTS
 		inline bool HitTest_Plane(const Plane& plane, const Ray& ray, HitRecord& hitRecord, bool ignoreHitRecord = false)
 		{
-			float rayToNormalDot{ Vector3::Dot(ray.direction, plane.normal) };
 			// Backface culling and recommended epsilon check.
-			if (rayToNormalDot < 0 && FLT_EPSILON <= rayToNormalDot)
+			float rayToNormalDot{ Vector3::Dot(ray.direction, plane.normal) };
+			if (0 < rayToNormalDot && FLT_EPSILON <= rayToNormalDot)
 				return false;
 
 			float t{ Vector3::Dot(plane.origin - ray.origin, plane.normal) / rayToNormalDot };
-			if (t < 0)
+			if (t < ray.min && t < ray.max)
 				return false;
 			if (!ignoreHitRecord)
 			{
-				hitRecord.didHit = true;
 				hitRecord.t = t;
 				hitRecord.materialIndex = plane.materialIndex;
+				hitRecord.origin = ray.origin + (t * ray.direction);
+				hitRecord.normal = plane.normal;
 			}
+			hitRecord.didHit = true;
 			return true;
 		}
 
@@ -100,9 +108,7 @@ namespace dae
 		//Direction from target to light
 		inline Vector3 GetDirectionToLight(const Light& light, const Vector3 origin)
 		{
-			//todo W3
-			assert(false && "No Implemented Yet!");
-			return {};
+			return light.origin - origin;
 		}
 
 		inline ColorRGB GetRadiance(const Light& light, const Vector3& target)
