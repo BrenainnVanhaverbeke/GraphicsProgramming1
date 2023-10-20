@@ -12,18 +12,17 @@ namespace dae
 		//SPHERE HIT-TESTS
 		inline bool HitTest_Sphere(const Sphere& sphere, const Ray& ray, HitRecord& hitRecord, bool ignoreHitRecord = false)
 		{
-			// Setting up triangle between ray origin, sphere origin and projection of camera-sphere vector on view ray.
 			Vector3 toCenter = sphere.origin - ray.origin;
 
 			float distanceToPerpendicular = Vector3::Dot(toCenter, ray.direction);
-			float centerToPerpendicular = sqrtf(Square(toCenter.Magnitude()) - Square(distanceToPerpendicular));
-			if (sphere.radius <= centerToPerpendicular)
+			float sphereToDot = sqrtf(Square(toCenter.Magnitude()) - Square(distanceToPerpendicular));
+			if (sphere.radius <= sphereToDot || distanceToPerpendicular < 0)
 				return false;
 
 			// Can calculate distance to intersect thanks to centerToPerpendicular
 			if (!ignoreHitRecord)
 			{
-				float intersectPerpendicularDistance = sqrtf(Square(sphere.radius) - Square(centerToPerpendicular));
+				float intersectPerpendicularDistance = sqrtf(Square(sphere.radius) - Square(sphereToDot));
 				hitRecord.didHit = true;
 				hitRecord.materialIndex = sphere.materialIndex;
 				hitRecord.t = distanceToPerpendicular - intersectPerpendicularDistance;

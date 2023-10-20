@@ -2,12 +2,13 @@
 #include "Utils.h"
 #include "Material.h"
 
-namespace dae {
+namespace dae
+{
 
 #pragma region Base Scene
 	//Initialize Scene with Default Solid Color Material (RED)
-	Scene::Scene():
-		m_Materials({ new Material_SolidColor({1,0,0})})
+	Scene::Scene() :
+		m_Materials({ new Material_SolidColor({1,0,0}) })
 	{
 		m_SphereGeometries.reserve(32);
 		m_PlaneGeometries.reserve(32);
@@ -17,7 +18,7 @@ namespace dae {
 
 	Scene::~Scene()
 	{
-		for(auto& pMaterial : m_Materials)
+		for (auto& pMaterial : m_Materials)
 		{
 			delete pMaterial;
 			pMaterial = nullptr;
@@ -28,7 +29,6 @@ namespace dae {
 
 	void dae::Scene::GetClosestHit(const Ray& ray, HitRecord& closestHit) const
 	{
-		// Arbitrarily large number to guarantee a closer hit.
 		HitRecord closest;
 		for (size_t i = 0; i < m_SphereGeometries.size(); i++)
 		{
@@ -120,7 +120,7 @@ namespace dae {
 #pragma region SCENE W1
 	void Scene_W1::Initialize()
 	{
-				//default: Material id0 >> SolidColor Material (RED)
+		//default: Material id0 >> SolidColor Material (RED)
 		constexpr unsigned char matId_Solid_Red = 0;
 		const unsigned char matId_Solid_Blue = AddMaterial(new Material_SolidColor{ colors::Blue });
 
@@ -139,10 +139,39 @@ namespace dae {
 		AddPlane({ 0.f, 75.f, 0.f }, { 0.f, -1.f,0.f }, matId_Solid_Yellow);
 		AddPlane({ 0.f, 0.f, 125.f }, { 0.f, 0.f,-1.f }, matId_Solid_Magenta);
 	}
-
-	void Scene_W1::Update(dae::Timer* pTimer)
-	{
-		Scene::Update(pTimer);
-	}
 #pragma endregion
+
+#pragma region SCENE W2
+
+	void Scene_W2::Initialize()
+	{
+		m_Camera.origin = { 0, 3.0f, -9.0f };
+		m_Camera.fovAngle = 45.0f;
+		constexpr unsigned char matId_Solid_Red = 0;
+		const unsigned char matId_Solid_Blue = AddMaterial(new Material_SolidColor{ colors::Blue });
+
+		const unsigned char matId_Solid_Yellow = AddMaterial(new Material_SolidColor{ colors::Yellow });
+		const unsigned char matId_Solid_Green = AddMaterial(new Material_SolidColor{ colors::Green });
+		const unsigned char matId_Solid_Magenta = AddMaterial(new Material_SolidColor{ colors::Magenta });
+
+		// Planes
+		AddPlane({ -5.0f, 0, 0, }, { 1.0f, 0, 0 }, matId_Solid_Green);
+		AddPlane({ 5.0f, 0, 0, }, { -1.0f, 0, 0 }, matId_Solid_Green);
+		AddPlane({ 0, 0, 0, }, { 0, 1.0f, 0 }, matId_Solid_Yellow);
+		AddPlane({ 0, 10.0f, 0, }, { 0, -1.0f, 0 }, matId_Solid_Yellow);
+		AddPlane({ 0, 0, 10.0f }, { 0, 0, -1.0f }, matId_Solid_Magenta);
+
+		// Spheres
+		AddSphere({ -1.75f, 1.0f, 0 }, 0.75f, matId_Solid_Red);
+		AddSphere({ 0, 1.0f, 0 }, 0.75f, matId_Solid_Blue);
+		AddSphere({ 1.75f, 1.0f, 0 }, 0.75f, matId_Solid_Red);
+		AddSphere({ -1.75f, 3.0f, 0 }, 0.75f, matId_Solid_Blue);
+		AddSphere({ 0, 3.0f, 0 }, 0.75f, matId_Solid_Red);
+		AddSphere({ 1.75f, 3.0f, 0 }, 0.75f, matId_Solid_Blue);
+
+		// Light
+		AddPointLight({ 0, 5.0f, -5.0f }, 70.0f, colors::White);
+	}
+
+#pragma endregion SCENE W2
 }

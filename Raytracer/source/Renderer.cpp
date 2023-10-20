@@ -12,7 +12,7 @@
 
 using namespace dae;
 
-Renderer::Renderer(SDL_Window * pWindow) :
+Renderer::Renderer(SDL_Window* pWindow) :
 	m_pWindow(pWindow),
 	m_pBuffer(SDL_GetWindowSurface(pWindow))
 {
@@ -26,19 +26,21 @@ void Renderer::Render(Scene* pScene) const
 	Camera& camera = pScene->GetCamera();
 	auto& materials = pScene->GetMaterials();
 	auto& lights = pScene->GetLights();
-	const float aspectRatio{ static_cast<float>(m_Width) / static_cast<float>(m_Height) };
-
+	const float width{ static_cast<float>(m_Width) };
+	const float height{ static_cast<float>(m_Height) };
+	const float aspectRatio{ width / height };
+	const float fov{ tanf(camera.fovAngle / 2.0f) };
+	const Matrix cameraToWorld{ camera.CalculateCameraToWorld() };
 	for (int px{}; px < m_Width; ++px)
 	{
 		for (int py{}; py < m_Height; ++py)
 		{
-			float viewX{ (((2.f * (static_cast<float>(px) + 0.5f)) / m_Width) - 1) * aspectRatio };
-			float viewY{ 1.f - ((2.f * static_cast<float>(py)) / m_Height) };
+			float viewX{ ((2.0f * (static_cast<float>(px) + 0.5f)) / width - 1.0f) * (aspectRatio * fov) };
+			float viewY{ (1.f - ((2.f * (static_cast<float>(py) + 0.5f)) / height)) * fov };
 			Vector3 rayDirection{ viewX, viewY, 1.0f };
 			rayDirection.Normalize();
-			Ray viewRay{ camera.origin, rayDirection };
 
-
+			Ray viewRay{ camera.origin, cameraToWorld.TransformVector(rayDirection).Normalized() };
 
 			ColorRGB finalColor{};
 			HitRecord closestHit{};
@@ -46,20 +48,15 @@ void Renderer::Render(Scene* pScene) const
 			pScene->GetClosestHit(viewRay, closestHit);
 
 			if (closestHit.didHit)
-			{
-				float scaled_t = closestHit.t / 175.f;
 				finalColor = materials[closestHit.materialIndex]->Shade();
-				ColorRGB test = materials[closestHit.materialIndex]->Shade() * scaled_t;
-				finalColor -= test;
-			}
 
 			//Update Color in Buffer
 			finalColor.MaxToOne();
 
 			m_pBufferPixels[px + (py * m_Width)] = SDL_MapRGB(m_pBuffer->format,
-				static_cast<uint8_t>(finalColor.r * 255),
-				static_cast<uint8_t>(finalColor.g * 255),
-				static_cast<uint8_t>(finalColor.b * 255));
+															  static_cast<uint8_t>(finalColor.r * 255),
+															  static_cast<uint8_t>(finalColor.g * 255),
+															  static_cast<uint8_t>(finalColor.b * 255));
 		}
 	}
 
