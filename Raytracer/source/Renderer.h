@@ -24,6 +24,8 @@ namespace dae
 
 		void Render(Scene* pScene) const;
 		bool SaveBufferToImage() const;
+		void ToggleShadows();
+		void CycleLightingMode();
 
 	private:
 		SDL_Window* m_pWindow{};
@@ -31,9 +33,22 @@ namespace dae
 		SDL_Surface* m_pBuffer{};
 		uint32_t* m_pBufferPixels{};
 
-		inline Ray GetViewRay(int px, int py, Camera& camera, const Matrix& cameraToWorld) const;
-
 		int m_Width{};
 		int m_Height{};
+
+		enum class LightingMode
+		{
+			ObservedArea,	// Lambert Cosine Law
+			Radiance,		// Incident radiance
+			BRDF,			// Light scattering
+			Combined		// ObservedArea * Radiance * BRDF
+		};
+
+		LightingMode m_CurrentLightingMode;
+		bool m_ShadowsEnabled;
+
+		inline Ray GetViewRay(int px, int py, Camera& camera, const Matrix& cameraToWorld) const;
+		inline void CalculateObservedArea() const;
+		inline void CalculateShadows(const HitRecord& closestHit, ColorRGB& finalColor, auto& lights, Scene* pScene) const;
 	};
 }

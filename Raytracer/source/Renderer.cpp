@@ -12,9 +12,11 @@
 
 using namespace dae;
 
-Renderer::Renderer(SDL_Window* pWindow) :
-	m_pWindow(pWindow),
-	m_pBuffer(SDL_GetWindowSurface(pWindow))
+Renderer::Renderer(SDL_Window* pWindow)
+	: m_pWindow(pWindow)
+	, m_pBuffer(SDL_GetWindowSurface(pWindow))
+	, m_CurrentLightingMode{ LightingMode::Combined }
+	, m_ShadowsEnabled{ true }
 {
 	//Initialize
 	SDL_GetWindowSize(pWindow, &m_Width, &m_Height);
@@ -41,17 +43,11 @@ void Renderer::Render(Scene* pScene) const
 			if (closestHit.didHit)
 			{
 				finalColor = materials[closestHit.materialIndex]->Shade();
-				Vector3 hitOrigin{ closestHit.origin + (closestHit.normal * 0.001f) };
-				for (size_t i = 0; i < lights.size(); i++)
-				{
-					Vector3 lightDirection{ LightUtils::GetDirectionToLight(lights[i], hitOrigin) };
-					Ray lightRay{ hitOrigin, lightDirection };
-					lightRay.max = lightDirection.Magnitude();
-					if (pScene->DoesHit(lightRay))
-						finalColor *= 0.5f;
-				}
+				if (m_CurrentLightingMode == LightingMode::ObservedArea || m_CurrentLightingMode == LightingMode::Combined)
+					CalculateObservedArea();
+				if (m_ShadowsEnabled)
+					CalculateShadows(closestHit, finalColor, lights, pScene);
 			}
-
 			//Update Color in Buffer
 			finalColor.MaxToOne();
 
@@ -72,6 +68,19 @@ bool Renderer::SaveBufferToImage() const
 	return SDL_SaveBMP(m_pBuffer, "RayTracing_Buffer.bmp");
 }
 
+void dae::Renderer::ToggleShadows()
+{
+	m_ShadowsEnabled = !m_ShadowsEnabled;
+}
+
+void dae::Renderer::CycleLightingMode()
+{
+	int currentLightingMode{ static_cast<int>(m_CurrentLightingMode) };
+	++currentLightingMode;
+	currentLightingMode %= static_cast<int>(LightingMode::Combined) + 1;
+	m_CurrentLightingMode = static_cast<LightingMode>(currentLightingMode);
+}
+
 inline Ray dae::Renderer::GetViewRay(int px, int py, Camera& camera, const Matrix& cameraToWorld) const
 {
 	const float width{ static_cast<float>(m_Width) };
@@ -85,4 +94,18 @@ inline Ray dae::Renderer::GetViewRay(int px, int py, Camera& camera, const Matri
 	rayDirection.Normalize();
 
 	return { camera.origin, cameraToWorld.TransformVector(rayDirection).Normalized() };
+}
+
+inline void dae::Renderer::CalculateShadows(const HitRecord& closestHit, ColorRGB& finalColor, auto& lights, Scene* pScene) const
+{
+	Vector3 hitOrigin{ closestHit.origin + (closestHit.normal * 0.001f) };
+	for (size_t i = 0; i < lights.size(); i++)
+	{
+		Vector3 lightDirection{ LightUtils::GetDirectionToLight(lights[i], hitOrigin) };
+		const float lightMagnitude{ lightDirection.Magnitude() };
+		Ray lightRay{ hitOrigin, lightDirection.Normalized() };
+		lightRay.max = lightMagnitude;
+		if (pScene->DoesHit(lightRay))
+			finalColor *= 0.5f;
+	}
 }
