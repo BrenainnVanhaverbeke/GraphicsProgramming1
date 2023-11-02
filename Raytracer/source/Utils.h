@@ -14,7 +14,7 @@ namespace dae
 		{
 			const float squaredRadius{ sphere.radius * sphere.radius };
 			const Vector3 sphereDirection = sphere.origin - ray.origin;
-			
+
 			// 1st triangle
 			float hypothenuse{ sphereDirection.SqrMagnitude() };
 			float projectionOnRay = Vector3::Dot(sphereDirection, ray.direction);
@@ -47,23 +47,25 @@ namespace dae
 		//PLANE HIT-TESTS
 		inline bool HitTest_Plane(const Plane& plane, const Ray& ray, HitRecord& hitRecord, bool ignoreHitRecord = false)
 		{
-			// Backface culling and recommended epsilon check.
+			// Backface culling and epsilon check.
 			float rayToNormalDot{ Vector3::Dot(ray.direction, plane.normal) };
-			if (0 < rayToNormalDot && FLT_EPSILON <= rayToNormalDot)
-				return false;
+			//if (0 < rayToNormalDot && FLT_EPSILON <= rayToNormalDot)
+			//	return false;
 
 			float t{ Vector3::Dot(plane.origin - ray.origin, plane.normal) / rayToNormalDot };
-			if (t < ray.min && t < ray.max)
-				return false;
-			if (!ignoreHitRecord)
+			if (ray.min < t && t < ray.max)
 			{
-				hitRecord.t = t;
-				hitRecord.materialIndex = plane.materialIndex;
-				hitRecord.origin = ray.origin + (t * ray.direction);
-				hitRecord.normal = plane.normal;
+				if (!ignoreHitRecord)
+				{
+					hitRecord.t = t;
+					hitRecord.materialIndex = plane.materialIndex;
+					hitRecord.origin = ray.origin + (t * ray.direction);
+					hitRecord.normal = plane.normal;
+				}
+				hitRecord.didHit = true;
+				return true;
 			}
-			hitRecord.didHit = true;
-			return true;
+			return false;
 		}
 
 		inline bool HitTest_Plane(const Plane& plane, const Ray& ray)
