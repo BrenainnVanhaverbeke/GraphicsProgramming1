@@ -33,15 +33,15 @@ namespace dae
 		for (size_t i = 0; i < m_SphereGeometries.size(); i++)
 		{
 			// If smaller distance is found, store in temporary HitRecord.
-			if (GeometryUtils::HitTest_Sphere(m_SphereGeometries[i], ray, closestHit) 
+			if (GeometryUtils::HitTest_Sphere(m_SphereGeometries[i], ray, closestHit)
 				&& closestHit.t < closest.t)
-					closest = closestHit;
+				closest = closestHit;
 		}
 		for (size_t i = 0; i < m_PlaneGeometries.size(); i++)
 		{
-			if (GeometryUtils::HitTest_Plane(m_PlaneGeometries[i], ray, closestHit) 
+			if (GeometryUtils::HitTest_Plane(m_PlaneGeometries[i], ray, closestHit)
 				&& closestHit.t < closest.t)
-					closest = closestHit;
+				closest = closestHit;
 		}
 		// Override closestHit with found closest.
 		closestHit = closest;
@@ -155,33 +155,89 @@ namespace dae
 
 	void Scene_W2::Initialize()
 	{
-		m_Camera.origin = { 0, 3.0f, -9.0f };
-		m_Camera.fovAngle = 45.0f;
+		m_Camera.origin = { 0.f, 3.f, -9.0f };
+		m_Camera.fovAngle = 45.f;
+
+		//default: Material id0 >> SolidColor Material (RED)
 		constexpr unsigned char matId_Solid_Red = 0;
 		const unsigned char matId_Solid_Blue = AddMaterial(new Material_SolidColor{ colors::Blue });
-
 		const unsigned char matId_Solid_Yellow = AddMaterial(new Material_SolidColor{ colors::Yellow });
 		const unsigned char matId_Solid_Green = AddMaterial(new Material_SolidColor{ colors::Green });
 		const unsigned char matId_Solid_Magenta = AddMaterial(new Material_SolidColor{ colors::Magenta });
 
-		// Planes
-		AddPlane({ -5.0f, 0, 0, }, { 1.0f, 0, 0 }, matId_Solid_Green);
-		AddPlane({ 5.0f, 0, 0, }, { -1.0f, 0, 0 }, matId_Solid_Blue);
-		AddPlane({ 0, 0, 0, }, { 0, 1.0f, 0 }, matId_Solid_Yellow);
-		AddPlane({ 0, 10.0f, 0, }, { 0, -1.0f, 0 }, matId_Solid_Yellow);
-		AddPlane({ 0, 0, 10.0f }, { 0, 0, -1.0f }, matId_Solid_Magenta);
+		//Plane
+		AddPlane({ -5.f,0.f,0.f }, { 1., 0.f, 0.f }, matId_Solid_Green);
+		AddPlane({ 5.f, 0.f,0.f }, { -1., 0, 0 }, matId_Solid_Green);
+		AddPlane({ 0.f, 0.f,0.f }, { 0.f, 1, 0 }, matId_Solid_Yellow);
+		AddPlane({ 0.f, 10.f,0.f }, { 0.f, -1.f,  0.f }, matId_Solid_Yellow);
+		AddPlane({ 0.f, 0.f,10.f }, { 0.f, 0, -1.f }, matId_Solid_Magenta);
 
-		// Spheres
-		AddSphere({ -1.75f, 1.0f, 0 }, 0.75f, matId_Solid_Red);
-		AddSphere({ 0, 1.0f, 0 }, 0.75f, matId_Solid_Blue);
-		AddSphere({ 1.75f, 1.0f, 0 }, 0.75f, matId_Solid_Red);
-		AddSphere({ -1.75f, 3.0f, 0 }, 0.75f, matId_Solid_Blue);
-		AddSphere({ 0, 3.0f, 0 }, 0.75f, matId_Solid_Red);
-		AddSphere({ 1.75f, 3.0f, 0 }, 0.75f, matId_Solid_Blue);
+		//Spheres
+		AddSphere({ -1.75f,1.f,0.f }, .75f, matId_Solid_Red);
+		AddSphere({ 0.f,1.f,0.f }, .75f, matId_Solid_Blue);
+		AddSphere({ 1.75f,1.f,0.f }, .75f, matId_Solid_Red);
+		AddSphere({ -1.75f,3.f,0.f }, .75f, matId_Solid_Blue);
+		AddSphere({ 0.f,3.f,0.f }, .75f, matId_Solid_Red);
+		AddSphere({ 1.75f,3.f,0.f }, .75f, matId_Solid_Blue);
 
-		// Light
-		AddPointLight({ 0, 5.0f, -5.0f }, 70.0f, colors::White);
+		//Light
+		AddPointLight({ 0.f,5.f,-5.f }, 70.f, colors::White);
 	}
 
 #pragma endregion SCENE W2
+	void Scene_W3::Initialize()
+	{
+		m_Camera.origin = { 0, 3.0f, -9.0f };
+		m_Camera.fovAngle = 45.0f;
+
+		GeneratePlanes();
+		GenerateSpheres();
+		GenerateLights();
+	}
+
+	void Scene_W3::GeneratePlanes()
+	{
+		constexpr ColorRGB albedo{ 0.49f, 0.57f, 0.57f };
+		constexpr float diffuseReflectance{ 1.0f };
+
+		const unsigned char matLambert_GrayBlue{ AddMaterial(new Material_Lambert(albedo, diffuseReflectance)) };
+
+		AddPlane(Vector3{ 0, 0, 10.0f }, Vector3{ 0, 0, -1.0f }, matLambert_GrayBlue); // Back
+		AddPlane(Vector3{ 0, 0, 0.0f }, Vector3{ 0, 0, -1.0f }, matLambert_GrayBlue);  // Bottom
+		AddPlane(Vector3{ 0, 10.0f, 0 }, Vector3{ 0, -1.0, 0 }, matLambert_GrayBlue);  // Top
+		AddPlane(Vector3{ 5.0f, 0, 0 }, Vector3{ -1.0f, 0, 0 }, matLambert_GrayBlue);  // Right
+		AddPlane(Vector3{ -5.0f, 0, 0 }, Vector3{ 1.0f, 0, 0 }, matLambert_GrayBlue);  // Left
+	}
+
+	void Scene_W3::GenerateSpheres()
+	{
+		constexpr ColorRGB albedoMetal{ 0.927f, 0.96f, 0.915f };
+		constexpr ColorRGB albedoPlastic{ 0.75f, 0.75f, 0.75f };
+		constexpr float metallicness{ 1.0f };
+		constexpr float plasticness{ 0 };
+		constexpr float rough{ 1.0f };
+		constexpr float medium{ 0.6f };
+		constexpr float smooth{ 0.1f };
+
+		const unsigned char matCT_GrayRoughMetal{ AddMaterial(new Material_CookTorrence(albedoMetal, metallicness, rough)) };
+		const unsigned char matCT_GrayMediumMetal{ AddMaterial(new Material_CookTorrence(albedoMetal, metallicness, medium)) };
+		const unsigned char matCT_GraySmoothMetal{ AddMaterial(new Material_CookTorrence(albedoMetal, metallicness, smooth)) };
+		const unsigned char matCT_GrayRoughPlastic{ AddMaterial(new Material_CookTorrence(albedoPlastic, plasticness, rough)) };
+		const unsigned char matCT_GrayMediumPlastic{ AddMaterial(new Material_CookTorrence(albedoPlastic, plasticness, medium)) };
+		const unsigned char matCT_GraySmoothPlastic{ AddMaterial(new Material_CookTorrence(albedoPlastic, plasticness, smooth)) };
+
+		AddSphere(Vector3{ -1.75f, 1.0f, 0 }, 0.75f, matCT_GrayRoughMetal);
+		AddSphere(Vector3{ 0, 1.0f, 0 }, 0.75f, matCT_GrayMediumMetal);
+		AddSphere(Vector3{ 1.75f, 1.0f, 0 }, 0.75f, matCT_GraySmoothMetal);
+		AddSphere(Vector3{ -1.75f, 3.0f, 0 }, 0.75f, matCT_GrayRoughPlastic);
+		AddSphere(Vector3{ 0, 3.0f, 0 }, 0.75f, matCT_GrayMediumPlastic);
+		AddSphere(Vector3{ 1.75f, 3.0f, 0 }, 0.75f, matCT_GraySmoothPlastic);
+	}
+
+	void Scene_W3::GenerateLights()
+	{
+		AddPointLight(Vector3{ 0, 5.0f, 5.0f }, 50.0f, ColorRGB{ 1.0f, 0.61f, 0.45f });      // Back
+		AddPointLight(Vector3{ -2.5f, 5.0f, -5.0f }, 50.0f, ColorRGB{ 1.0f, 0.61f, 0.45f }); // Front left
+		AddPointLight(Vector3{ 2.5f, 2.5f, -5.0f }, 50.0f, ColorRGB{ 1.0f, 0.61f, 0.45f });  // Front right
+	}
 }
